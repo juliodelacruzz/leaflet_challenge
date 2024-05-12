@@ -54,3 +54,7 @@ Each point has a tooltip with the Magnitude, the location and depth (10 points)
 
 All data points load in the correct locations (10 points)
 
+Using class recordings, class examples, online resources, and help from my peers, I was able to complete this challenge.
+
+RESULTS 
+![leaflet1](https://github.com/juliodelacruzz/leaflet_challenge/assets/31105353/6462a4ea-86b8-4e9e-ab5d-96d887f0fea5)
