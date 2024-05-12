@@ -1,42 +1,38 @@
 var myMap = L.map("map", {
-    center: [37.773972, -122.431297], // Adjust center as needed
+    center: [37.773972, -122.431297], // Center on San Francisco
     zoom: 5
 });
 
-
-//adding tile layer, which is centered on San Francisco
+// adding tile layer centered on San Francisco
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
 }).addTo(myMap);
 
-// based on the url, we can use the fetch function to collect earthquake data from the server
-fetch("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson")
-    .then(function(response) {
-        return response.json();
-    })
-    .then(function(data) {
-        L.geoJSON(data, {
-            pointToLayer: function(feature, latlng) {
-                var geojsonMarkerOptions = {
-                    radius: 4 * feature.properties.mag, // Size based on magnitude
-                    fillColor: getColor(feature.geometry.coordinates[2]), // Color based on depth
-                    color: "#000",
-                    weight: 1,
-                    opacity: 1,
-                    fillOpacity: 0.8
-                };
-                return L.circleMarker(latlng, geojsonMarkerOptions);
-            },
-            onEachFeature: function(feature, layer) { //adding magnitude and depth based on where the earthquake happened to the popup
-                layer.bindPopup("<h3>Magnitude: " + feature.properties.mag + "</h3><hr><p>" +
-                    new Date(feature.properties.time) + "</p><p>Depth: " +
-                    feature.geometry.coordinates[2] + " km</p>");
-            }
-        }).addTo(myMap);
-    });
+// Fetching GeoJSON earthquake data using D3.js
+d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson").then(function(data) {
+    L.geoJSON(data, {
+        pointToLayer: function(feature, latlng) {
+            var geojsonMarkerOptions = {
+                radius: 4 * feature.properties.mag, // Size based on magnitude
+                fillColor: getColor(feature.geometry.coordinates[2]), // Color based on depth
+                color: "#000",
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.8
+            };
+            return L.circleMarker(latlng, geojsonMarkerOptions);
+        },
+        onEachFeature: function(feature, layer) { //adding earthquake information to popup
+            var popupContent = "<h3>Magnitude: " + feature.properties.mag + "</h3>" +
+                "<hr><p>Location: " + feature.properties.place + "</p>" +
+                "<p>Depth: " + feature.geometry.coordinates[2] + " km</p>";
+            layer.bindPopup(popupContent);
+        }
+    }).addTo(myMap);
+});
 
 
-    // creating a function which uses conditionals to assign color based on depth
+//function to assign color based on depth using conditional if statements
 function getColor(depth) {
     if (depth < 10 && depth >= -10) {
         return "#b6d7a8"; // very shallow
@@ -51,11 +47,13 @@ function getColor(depth) {
     } else return "#990000"; // extremely deep
 }
 
-var legend = L.control({position: 'bottomright'}); //initiating legend and putting it on the bottom right of the page
+// Adding legend to the map
+var legend = L.control({position: 'bottomright'});
 
 legend.onAdd = function (map) {
     var div = L.DomUtil.create('div', 'info legend'),
-        depths = [-10, 10, 30, 50, 70, 90];
+        depths = [-10, 10, 30, 50, 70, 90],
+        labels = [];
     div.innerHTML = '<strong>Depth (km)</strong><br>';
     depths.forEach(function(depth, index) {
         var nextDepth = depths[index + 1];
